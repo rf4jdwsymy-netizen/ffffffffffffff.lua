@@ -2364,9 +2364,9 @@ local Window = OrionLib:MakeWindow({
     Name = "Hydrogen",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "iyanhub",
+    ConfigFolder = "hydrogenhub",
     IntroEnabled = true,
-    IntroText = "load",
+    IntroText = "Hydrogen Load...",
     IntroIcon = "rbxassetid://7733960981",
     Icon = ""
 })
@@ -2378,16 +2378,9 @@ OrionLib:MakeNotification({
     Time = 5
 })
 
-OrionLib:MakeNotification({
-    Name = "hello",
-    Content = "hey you iyanhub? Pls join Discord Server https://discord.gg/https://discord.gg/YqmhW4Se8B",
-    Image = "rbxassetid://4483345998",
-    Time = 5
-})
-
 local SilentTab = Window:MakeTab({
     Name = "Silent Aim TEST",
-    Icon = "rbxassetid://73570431850302",
+    Icon = "person-standing",
     PremiumOnly = false
 })
 
@@ -2423,6 +2416,12 @@ local killTab = Window:MakeTab({
 
 local BlobmanTab = Window:MakeTab({
     Name = "Blobman Grab",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local SettingTab = Window:MakeTab({
+    Name = "Blobman Settings",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -5130,138 +5129,126 @@ AuraTab:AddToggle({
     end
 })
 
-AuraTab:AddToggle({
-    Name = "Fling Aura",
-    Default = false,
-    Save = false,
-    Flag = "FlingAura",
-    Callback = function(enabled)
-        runningFlingAura = enabled
-        if enabled then
-            coroutine.wrap(function()
-                while runningFlingAura do
-                    pcall(function()
-                        local character = localPlayer.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local root = character.HumanoidRootPart
-                            for _, player in pairs(Players:GetPlayers()) do
-                                if player ~= localPlayer and player.Character then
-                                    local isFriend = _G.Aurahowait and localPlayer:IsFriendsWith(player.UserId)
-                                    if not isFriend then
-                                        local targetChar = player.Character
-                                        local torso = targetChar:FindFirstChild("Torso")
-                                        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
-                                        if torso and targetRoot then
-                                            local distance = (torso.Position - root.Position).Magnitude
-                                            if distance <= auraRadius then
-                                                local velocity = torso:FindFirstChild("l") or
-                                                                     Instance.new("BodyVelocity", torso)
-                                                velocity.Name = "l"
-                                                velocity.Velocity = Vector3.new(5e10, 5e15, 5e10)
-                                                velocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                                Debris:AddItem(velocity, 2)
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end)
-                    wait()
-                end
-            end)()
-        end
-    end
-})
-
+local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
 
 AuraTab:AddToggle({
     Name = "Freeze Aura",
     Default = false,
     Save = false,
     Flag = "FreezeAura",
+
     Callback = function(enabled)
         runningFreezeAura = enabled
 
         if enabled then
-            coroutine.wrap(function()
+            task.spawn(function()
                 while runningFreezeAura do
                     pcall(function()
-                        local character = localPlayer.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local root = character.HumanoidRootPart
+
+                        local char = localPlayer.Character
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+
+                        if root then
                             for _, player in pairs(Players:GetPlayers()) do
                                 if player ~= localPlayer and player.Character then
-                                    local isFriend = _G.Aurahowait and localPlayer:IsFriendsWith(player.UserId)
-                                    if not isFriend then
-                                        local targetChar = player.Character
-                                        local torso = targetChar:FindFirstChild("Torso")
-                                        if torso then
-                                            local distance = (torso.Position - root.Position).Magnitude
-                                            if distance <= auraRadius then
-                                                local velocity = torso:FindFirstChild("l") or
-                                                                     Instance.new("BodyVelocity")
-                                                velocity.Name = "l"
-                                                velocity.Velocity = Vector3.new(0, 0, 0)
-                                                velocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                                velocity.Parent = torso
-                                                Debris:AddItem(velocity, 2)
-                                            end
+
+                                    local targetRoot =
+                                        player.Character:FindFirstChild("HumanoidRootPart")
+                                        or player.Character:FindFirstChild("Torso")
+                                        or player.Character:FindFirstChild("UpperTorso")
+
+                                    if targetRoot then
+                                        local dist =
+                                            (targetRoot.Position - root.Position).Magnitude
+
+                                        if dist <= (auraRadius or 20) then
+                                            local bv = Instance.new("BodyVelocity")
+                                            bv.Name = "FreezeAuraVelocity"
+                                            bv.Velocity = Vector3.zero
+                                            bv.MaxForce = Vector3.new(
+                                                math.huge,
+                                                math.huge,
+                                                math.huge
+                                            )
+                                            bv.Parent = targetRoot
+
+                                            Debris:AddItem(bv,0.2)
                                         end
                                     end
                                 end
                             end
                         end
                     end)
-                    task.wait(0.1)
+
+                    task.wait(0.15)
                 end
-            end)()
+            end)
         end
     end
 })
-
 
 AuraTab:AddToggle({
     Name = "Spin Aura",
     Default = false,
     Save = false,
     Flag = "SpinAura",
+
     Callback = function(enabled)
         runningSpinAura = enabled
 
         if enabled then
-            coroutine.wrap(function()
+            task.spawn(function()
                 while runningSpinAura do
                     pcall(function()
-                        local character = localPlayer.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local root = character.HumanoidRootPart
+
+                        local char = localPlayer.Character
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+
+                        if root then
                             for _, player in pairs(Players:GetPlayers()) do
                                 if player ~= localPlayer and player.Character then
-                                    local isFriend = _G.Aurahowait and localPlayer:IsFriendsWith(player.UserId)
-                                    if not isFriend then
-                                        local targetChar = player.Character
-                                        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
-                                        if targetRoot then
-                                            local distance = (targetRoot.Position - root.Position).Magnitude
-                                            if distance <= auraRadius then
-                                                local spin = targetRoot:FindFirstChild("SpinGyro") or Instance.new("BodyAngularVelocity")
-                                                spin.Name = "SpinGyro"
-                                                spin.AngularVelocity = Vector3.new(0, 100, 200)
-                                                spin.MaxTorque = Vector3.new(0, math.huge, 0)
-                                                spin.P = 1250
+
+                                    local targetRoot =
+                                        player.Character:FindFirstChild("HumanoidRootPart")
+
+                                    if targetRoot then
+
+                                        local dist =
+                                        (targetRoot.Position - root.Position).Magnitude
+
+                                        if dist <= (auraRadius or 20) then
+
+                                            local spin = targetRoot:FindFirstChild("SpinAura")
+
+                                            if not spin then
+                                                spin = Instance.new("BodyAngularVelocity")
+                                                spin.Name = "SpinAura"
+                                                spin.AngularVelocity =
+                                                    Vector3.new(0,200,0)
+                                                spin.MaxTorque =
+                                                    Vector3.new(
+                                                        math.huge,
+                                                        math.huge,
+                                                        math.huge
+                                                    )
+                                                spin.P = 10000
                                                 spin.Parent = targetRoot
-                                                Debris:AddItem(spin, 2)
                                             end
+
+                                            Debris:AddItem(spin,0.5)
                                         end
                                     end
                                 end
                             end
                         end
+
                     end)
+
                     task.wait(0.1)
                 end
-            end)()
+            end)
         end
     end
 })
@@ -5369,85 +5356,102 @@ AuraTab:AddToggle({
 })
 
 AuraTab:AddToggle({
-    Name = "Bury Opponent",
+    Name = "Void Aura",
     Default = false,
     Save = false,
     Flag = "narakuGrab",
-    Callback = function(enabled)
-        local Players = game:GetService("Players")
-        local localPlayer = Players.LocalPlayer
 
-        local runningNarakuGrab = enabled
+    Callback = function(enabled)
+
+        runningNarakuGrab = enabled
 
         if enabled then
-            coroutine.wrap(function()
+            task.spawn(function()
+
                 while runningNarakuGrab do
                     pcall(function()
-                        local character = localPlayer.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local humanoidRootPart = character.HumanoidRootPart
-                            for _, player in pairs(Players:GetPlayers()) do
+
+                        local char = localPlayer.Character
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+
+                        if root then
+
+                            for _,player in pairs(Players:GetPlayers()) do
+
                                 if player ~= localPlayer and player.Character then
-                                    local isFriend = _G.Aurahowait and localPlayer:IsFriendsWith(player.UserId)
-                                    if not isFriend then
-                                        local playerCharacter = player.Character
-                                        local playerTorso = playerCharacter:FindFirstChild("Torso")
-                                        if playerTorso then
-                                            local distance =
-                                                (playerTorso.Position - humanoidRootPart.Position).Magnitude
-                                            if distance <= auraRadius then
-                                                SetNetworkOwner:FireServer(playerTorso, humanoidRootPart.CFrame)
 
-                                                local force =
-                                                    playerTorso:FindFirstChild("GravityForce") or
-                                                        Instance.new("BodyForce")
-                                                force.Name = "GravityForce"
-                                                force.Parent = playerTorso
-                                                force.Force = Vector3.new(0, 600, 0)
+                                    local target =
+                                    player.Character:FindFirstChild("HumanoidRootPart")
 
-                                                for _, part in ipairs(playerCharacter:GetDescendants()) do
-                                                    if part:IsA("BasePart") then
-                                                        part.CanCollide = false
-                                                    end
-                                                end
-                                            else
-                                                local force = playerTorso and playerTorso:FindFirstChild("GravityForce")
-                                                if force then
-                                                    force:Destroy()
-                                                end
-                                                for _, part in ipairs(playerCharacter:GetDescendants()) do
-                                                    if part:IsA("BasePart") then
-                                                        part.CanCollide = true
-                                                    end
+                                    if target then
+
+                                        local dist =
+                                        (target.Position - root.Position).Magnitude
+
+                                        if dist <= (auraRadius or 25) then
+
+                                            if SetNetworkOwner then
+                                                SetNetworkOwner:FireServer(
+                                                    target,
+                                                    root.CFrame
+                                                )
+                                            end
+
+
+                                            local force =
+                                            target:FindFirstChild("VoidForce")
+                                            or Instance.new("BodyForce")
+
+                                            force.Name = "VoidForce"
+                                            force.Force =
+                                            Vector3.new(0,800,0)
+                                            force.Parent = target
+
+
+                                            for _,v in pairs(player.Character:GetDescendants()) do
+                                                if v:IsA("BasePart") then
+                                                    v.CanCollide = false
                                                 end
                                             end
+
+                                        else
+
+                                            local force =
+                                            target:FindFirstChild("VoidForce")
+
+                                            if force then
+                                                force:Destroy()
+                                            end
+
                                         end
                                     end
                                 end
                             end
                         end
+
                     end)
-                    wait()
+
+                    task.wait(0.1)
                 end
-                for _, player in pairs(Players:GetPlayers()) do
-                    if player.Character then
-                        local playerTorso = player.Character:FindFirstChild("Torso")
-                        if playerTorso then
-                            local force = playerTorso:FindFirstChild("GravityForce")
-                            if force then
-                                force:Destroy()
-                            end
-                            for _, part in ipairs(player.Character:GetDescendants()) do
-                                if part:IsA("BasePart") then
-                                    part.CanCollide = true
-                                end
-                            end
+
+            end)
+
+        else
+
+            for _,player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    local root =
+                    player.Character:FindFirstChild("HumanoidRootPart")
+
+                    if root then
+                        local force = root:FindFirstChild("VoidForce")
+                        if force then
+                            force:Destroy()
                         end
                     end
                 end
-            end)()
-        else
-            runningNarakuGrab = false
+            end
+
         end
     end
 })
@@ -5460,8 +5464,12 @@ AuraTab:AddToggle({
     end
 })
 
+local FpsSection = CharacterTab:AddSection({
+    Name = "FPS"
+})
+
 CharacterTab:AddSlider({
-    Name = "FPS上限解放",
+    Name = "FPS",
     Min = 2,
     Max = 2000,
     Default = 300,
@@ -5472,16 +5480,25 @@ CharacterTab:AddSlider({
         setfpscap(fpsCap1)
     end
 })
+
+local thirdpersonSection = CharacterTab:AddSection({
+    Name = "third person"
+})
+
 CharacterTab:AddButton({
-    Name = "三人称",
+    Name = "third person",
     Callback = function()
         game.Players.LocalPlayer.CameraMaxZoomDistance = 8000000
         game.Players.LocalPlayer.CameraMode = "Classic"
     end
 })
 
+local FovSection = CharacterTab:AddSection({
+    Name = "FOV"
+})
+
 CharacterTab:AddSlider({
-    Name = "fov",
+    Name = "FOV",
     Min = 0,
     Max = 120,
     Default = 80,
@@ -5493,9 +5510,13 @@ CharacterTab:AddSlider({
     end
 })
 
+local MovementsSection = CharacterTab:AddSection({
+    Name = "Movements"
+})
+
 local asss = false
 CharacterTab:AddToggle({
-    Name = "キャラクターの移動",
+    Name = "Walk Speed",
     Default = false,
     Callback = function(Value)
         asss = Value
@@ -5515,7 +5536,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
 end)
 
 CharacterTab:AddSlider({
-    Name = "キャラクターのスピード",
+    Name = "Speed",
     Min = 0,
     Max = 200,
     Color = Color3.fromRGB(255, 255, 255),
@@ -5534,7 +5555,7 @@ local N = {
 }
 local O = game.Players.LocalPlayer
 local JumpPowerToggle = CharacterTab:AddToggle({
-    Name = "ジャンプ",
+    Name = "Jump Power",
     CurrentValue = false,
     Flag = "JumpPowerToggle",
     Callback = function(Value)
@@ -5552,7 +5573,7 @@ local JumpPowerToggle = CharacterTab:AddToggle({
 })
 
 CharacterTab:AddSlider({
-    Name = "ジャンプの高さ",
+    Name = "Power",
     Min = 0,
     Max = 1000,
     Color = Color3.fromRGB(255, 255, 255),
@@ -5569,7 +5590,7 @@ CharacterTab:AddSlider({
     end
 })
 CharacterTab:AddSlider({
-    Name = "キャラクターの高さ",
+    Name = "Player Height",
     Min = -50,
     Max = 20,
     Color = Color3.fromRGB(255, 255, 255),
@@ -5585,7 +5606,7 @@ CharacterTab:AddSlider({
 
 InfiniteJumpEnabled = false
 CharacterTab:AddToggle({
-    Name = "無限ジャンプ",
+    Name = "infinity Jump",
     Default = false,
     Callback = function(value)
         InfiniteJumpEnabled = value
@@ -5601,7 +5622,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 ScriptTab:AddButton({
-    Name = "無敵",
+    Name = "invincible",
     Callback = function()
         local Players = game:GetService("Players")
         local LocalPlayer = Players.LocalPlayer
@@ -6789,10 +6810,10 @@ iyanTab:AddLabel("id : ueeeeee1321")
 iyanTab:AddLabel("id : onicha.jp")
 iyanTab:AddLabel("id : cry_bana34")
 iyanTab:AddLabel("id : rinne0832")
-arasuTab:AddLabel("うんこは自分でお願いします…")
-arasuTab:AddLabel("食べたらオンにしてゲロかけてください")
+arasuTab:AddLabel("Please poop yourself...")
+arasuTab:AddLabel("After you eat, turn it on and throw up.")
 arasuTab:AddToggle({
-    Name = "ゲロかけALL",
+    Name = "Vomit on All",
     Default = false,
     Callback = function(value)
         bringingEnabled = value
@@ -6863,7 +6884,7 @@ local function RefreshList()
 end
 
 PlayerDropdown = freezeATab:AddDropdown({
-    Name = "どこでも突破するプレイヤーを選ぶ",
+    Name = "Choose a player who can break through anywhere.",
     Options = playerNames,
     Callback = function(selectedDisplay)
         SelectedPlayer = nameMap[selectedDisplay]
@@ -6910,7 +6931,7 @@ function infiniteLoop()
     end
 end
 freezeATab:AddToggle({
-    Name = "どこでも突破",
+    Name = "Breakthrough anywhere",
     Default = false,
     Callback = function(toggleState)
 
@@ -6949,7 +6970,7 @@ freezeATab:AddToggle({
 
 
 freezeATab:AddButton({
-    Name = "リスト更新",
+    Name = "List update",
     Callback = RefreshList
 })
 RefreshList()
@@ -7051,7 +7072,7 @@ end
 update1()
 
 local playerDropdown = freezeATab:AddDropdown({
-    Name = "無敵突破したいプレイヤーを選択",
+    Name = "Select the player you want to overcome.",
     Options = playerNames,
     Default = nil,
     Callback = function(selectedDisplay)
@@ -7157,7 +7178,7 @@ local auRadius = 20
 local ACoroutine = nil
 
 freezeATab:AddToggle({
-    Name = "無敵突破",
+    Name = "Invincible breakthrough",
     Default = false,
     Callback = function(enabled)
         if enabled then
@@ -7241,7 +7262,7 @@ freezeATab:AddToggle({
 
 objectOptions = {"BallSnowball"}
 freezeATab:AddDropdown({
-    Name = "当てるオブジェクトを選ぶ",
+    Name = "Choose the object to hit.",
     Options = objectOptions,
     Default = "BallSnowball",
     Callback = function(selectedObject)
@@ -7253,7 +7274,7 @@ local runningCoroutine = nil
 local Clipon = false
 
 CharacterTab:AddToggle({
-    Name = "ノクリップ",
+    Name = "noclip",
     Default = false,
     Callback = function(value)
         Clipon = value
@@ -7452,10 +7473,14 @@ function toggleAnchored(toggled)
     anchorParts(creature4)
 end
 
-CharacterTab:AddLabel("ブロブマンのスピード。高さ、ノクリップを決めれます")
+local BlobmanSection = SettingTab:AddSection({
+    Name = "Blobman Setting"
+})
 
-CharacterTab:AddToggle({
-    Name = "ブロブマン、アンカー",
+SettingTab:AddLabel("Blobman's speed. He can execute high and no-clip shots.")
+
+SettingTab:AddToggle({
+    Name = "Blobman, anchor",
     Default = false,
     Callback = function(blobanchor)
         if blobanchor then
@@ -7469,8 +7494,8 @@ CharacterTab:AddToggle({
 noClipCoroutine = nil
 noClipEnabled = false
 
-CharacterTab:AddToggle({
-    Name = "ブロブマン、ノクリップ",
+SettingTab:AddToggle({
+    Name = "Blobman, Noclip",
     Default = false,
     Callback = function(aiueo)
         if aiueo then
@@ -7501,7 +7526,7 @@ originalWalkSpeed = nil
 findHumanoidCoroutine = nil
 findHumanoidEnabled = false
 CharacterTab:AddToggle({
-    Name = "ブロブマン、スピード、高さ",
+    Name = "Blobman, speed, height",
     Default = false,
     Callback = function(aiueo)
         if aiueo then
@@ -7545,8 +7570,8 @@ CharacterTab:AddToggle({
     end
 })
 
-CharacterTab:AddSlider({
-    Name = "ブロブマンの高さ",
+SettingTab:AddSlider({
+    Name = "Blobman's height",
     Min = -500,
     Max = 500,
     Color = Color3.fromRGB(255, 255, 255),
@@ -7560,8 +7585,8 @@ CharacterTab:AddSlider({
     end
 })
 
-CharacterTab:AddSlider({
-    Name = "ブロブマンのスピード",
+SettingTab:AddSlider({
+    Name = "Blobman's Speed",
     Min = 0,
     Max = 300,
     Color = Color3.fromRGB(255, 255, 255),
@@ -7609,7 +7634,7 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 
 local playerDropdown = ESPTab:AddDropdown({
-    Name = "視点を見たいプレイヤーを選択",
+    Name = "Select the player whose perspective you want to see.",
     Options = playerNames,
     Callback = function(selectedDisplay)
         targetPlayerName = nameMap[selectedDisplay]
@@ -7619,7 +7644,7 @@ local playerDropdown = ESPTab:AddDropdown({
 local bodyParts = {"Humanoid", "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "HumanoidRootPart"}
 
 local partDropdown = ESPTab:AddDropdown({
-    Name = "見る部位",
+    Name = "Part to see",
     Options = bodyParts,
     Callback = function(selectedPart)
         targetPartName = selectedPart
@@ -7641,7 +7666,7 @@ Players.PlayerAdded:Connect(RefreshPlayerList)
 Players.PlayerRemoving:Connect(RefreshPlayerList)
 
 ESPTab:AddToggle({
-    Name = "プレイヤーの視点をみる",
+    Name = "View from the player's perspective",
     Default = false,
     Callback = function(value)
         if value and targetPlayerName then
